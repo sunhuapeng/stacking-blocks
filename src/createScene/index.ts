@@ -29,6 +29,7 @@ class CreateScene {
   // 创建场景
   createScene(): void {
     this.scene = new THREE.Scene();
+    this.scene.updateMatrixWorld(true);
   }
   // 创建渲染器
   createRenderer(): void {
@@ -43,7 +44,7 @@ class CreateScene {
   createCamera(): void {
     this.camera = new THREE.OrthographicCamera(this.width / - 2, this.width / 2, this.height / 2, this.height / - 2, 1, this.frustumSize);
     this.camera.zoom = 3
-    console.log(this.camera)
+    // console.log(this.camera)
     this.camera.position.set(200, 250, 200)
     this.scene.add(this.camera);
     this.camera.updateProjectionMatrix()

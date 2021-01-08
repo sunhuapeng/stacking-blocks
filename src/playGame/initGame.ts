@@ -1,8 +1,8 @@
 const THREE = require("three");
 import { createCube, playDown } from '../utils/tools'
-import { getSize, getPosition, getArea } from '../utils/getBox'
+import { getSize, getPosition, getArea, getCenter } from '../utils/getBox'
 import { OrbitControls } from "../../node_modules/three/examples/jsm/controls/OrbitControls";
-
+import { instancedMesh } from '../utils/tools'
 // 引入封装好的动画
 import { Animate, NumberAnimate } from '../utils/animate'
 // import { Ammo } from '../utils/ammo.wasm.js'
@@ -10,7 +10,7 @@ import { Animate, NumberAnimate } from '../utils/animate'
 // require('../utils/ammo.wasm.js')
 
 // 引入物理动画
-// import { AmmoPhysics } from '../utils/AmmoPhysics.js'
+import { AmmoPhysics } from '../utils/AmmoPhysics.js'
 
 import { cutLead } from './cutLead'
 interface Element {
@@ -38,7 +38,8 @@ class CreateGame {
   flag: boolean = false // 奇偶数主角
   isOver: boolean = false // 是否游戏结束
   areaCount: number = 0  // 分数
-  
+  invalidGroup:THREE.Group = new THREE.Group() // 无效区域
+
   constructor(element: Element) {
     this.scene = element.scene
     this.scene.autoUpdate
@@ -46,10 +47,16 @@ class CreateGame {
     this.controls = element.controls
     this.floorGroup = new THREE.Group()
     this.scene.add(this.floorGroup)
-    this.initFloor()
+    this.scene.add(this.invalidGroup)
+
+    this.initAmmo()
     window.addEventListener('keydown', this.leadStop.bind(this))
   }
-  async initFloor() {
+  async initAmmo() {
+    this.physics = await AmmoPhysics();
+    this.initFloor()
+  }
+  initFloor() {
     // 定义物理学插件
     // this.physics = await new AmmoPhysics();
     const w: number = this.size
@@ -63,11 +70,16 @@ class CreateGame {
       y: h / 2,
       z: l / 2
     }
-    this.floorCube = createCube(floorParams)
+    this.floorCube = createCube(floorParams);
     // 将第一个底板添加到物理学插件中
     this.floorGroup.add(this.floorCube)
     this.floorGroup.updateMatrix()
-    // this.physics.addMesh(this.floorCube)
+
+    // 创建一个跟底板相同位置信息的实例化网格
+    const floor = instancedMesh(this.floorCube)
+    this.physics.addMesh(floor)
+    console.log(this.physics)
+  
   }
   createlead() {
     const size = new THREE.Vector3()
@@ -136,8 +148,8 @@ class CreateGame {
       end.setX(start.x)
     }
     // 开启主角动画
-    // 每增加一层减100毫秒 难度增加
-    const t = Math.max(this.T - this.leadCount * 100, 500)
+    // 每增加一层减20毫秒 难度增加
+    const t = Math.max(this.T - this.leadCount * 20, 500)
     this.tween = new Animate(this.leadCube, end, t)
 
     if (this.tween) {
@@ -174,8 +186,21 @@ class CreateGame {
       if (meshArr[0]) {
         this.floorGroup.remove(this.leadCube)
         this.floorGroup.add(meshArr[0])
+        // 克隆一个有效区域
+        const newMesh: any = meshArr[0].clone();
+
+        // 获取主角的中心点作为有效区域底板的位置
+        const center = new THREE.Vector3()
+        getCenter(newMesh, center)
+        // console.log(center)
+
+        const phyMesh = instancedMesh(newMesh, center.clone())
+
+        // 有效区域不动，第二参数默认不传
+        this.physics.addMesh(phyMesh, 1)
+
         // 将本次的有效区域作为下一次的主角
-        this.leadCube = meshArr[0].clone()
+        this.leadCube = newMesh.clone()
         const area = getArea(this.leadCube.clone())
         this.areaCount += area
         this.upDateFraction()
@@ -186,10 +211,20 @@ class CreateGame {
       }
       // 判断无效区域
       if (meshArr[1]) {
-        this.scene.add(meshArr[1])
-        // 自由落体后做处理，先将无效区域位置改变后删除
-        // this.physics.addMesh(meshArr[1])
-        playDown(meshArr[1])
+        // 创建无效区域实体网格
+        const newMesh = meshArr[1]
+
+        // 获取无效区域中心点
+        const center = new THREE.Vector3()
+        getCenter(newMesh, center)
+
+        // 创建无效区域实体化网格
+        const phyMesh = instancedMesh(newMesh, center)
+
+        this.invalidGroup.add(phyMesh)
+        // 自由落体
+        this.physics.addMesh(phyMesh, 1)
+
       }
     } else {
       // 返回值为[]，或者无效  游戏结束
@@ -243,6 +278,7 @@ class CreateGame {
     if (this.isOver) {
       // 重置变量
       this.floorGroup.remove(...this.floorGroup.children)
+      this.invalidGroup.remove(...this.invalidGroup.children)
       this.leadCount = 0
       this.leadCube = null
       this.tween = null

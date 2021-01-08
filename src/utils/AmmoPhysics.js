@@ -8,6 +8,7 @@ async function AmmoPhysics() {
 	}
 
 	const AmmoLib = await Ammo(); // eslint-disable-line no-undef
+
 	const frameRate = 60;
 
 	const collisionConfiguration = new AmmoLib.btDefaultCollisionConfiguration();

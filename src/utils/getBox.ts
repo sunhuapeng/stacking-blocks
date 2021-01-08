@@ -14,6 +14,11 @@ export function getSize(mesh: THREE.Object3D, v3: THREE.Vector3) {
     getBox(mesh).getSize(v3);
   }
 }
+export function getCenter(mesh:THREE.Object3D, v3: THREE.Vector3) {
+  if (v3 instanceof THREE.Vector3) {
+    getBox(mesh).getCenter(v3);
+  }
+}
 
 export function getArea(mesh): number {
   const size = new THREE.Vector3()

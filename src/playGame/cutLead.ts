@@ -7,9 +7,6 @@ const THREE = require("three");
 
 require("../utils/threebsp.js");
 
-import { getSize, getPosition } from '../utils/getBox'
-
-import { instancedMesh } from '../utils/tools'
 export function cutLead<T>(lead: T, lastLead: T): T[] | undefined[] {
   let meshList: T[] = []
   if (lead && lastLead) {
@@ -21,9 +18,9 @@ export function cutLead<T>(lead: T, lastLead: T): T[] | undefined[] {
     // 有效区域
     const intersectResult = handleBsp(leadBsp, lastLeadBsp, 'intersect')
     meshList.push(intersectResult)
+
     // 无效区域
     const subtractResult = handleBsp(leadBsp, lastLeadBsp, 'subtract')
-
     meshList.push(subtractResult)
 
   } else {
@@ -54,12 +51,7 @@ function handleBsp(firstBSP: any, secondBSP: any, type: string) {
     //重新赋值一个纹理
     var material = new THREE.MeshNormalMaterial();
     intersectResult.material = material;
+    intersectResult.updateMatrix()
     return intersectResult
-    if (type === 'intersect') {
-    } else {
-      const position = new THREE.Vector3()
-      getPosition(intersectResult, position)
-      return instancedMesh(intersectResult, position)
-    }
   }
 }

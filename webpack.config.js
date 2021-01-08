@@ -53,7 +53,7 @@ module.exports = {
     disableHostCheck: true // 取消host检查
   },
   resolve: {
-    extensions: ['.js', '.jsx', '.ts', '.tsx']
+    extensions: ['.js', '.jsx', '.ts', '.tsx'],
   },
   output: {
     filename: "[name].bundle.js",
