@@ -51,6 +51,8 @@ class CreateGame {
 
     this.initAmmo()
     window.addEventListener('keydown', this.leadStop.bind(this))
+    document.body.onclick = this.leadStop.bind(this, 'click')
+    window.onclick = this.leadStop.bind(this, 'click')
   }
   async initAmmo() {
     this.physics = await AmmoPhysics();
@@ -158,10 +160,10 @@ class CreateGame {
     }
   }
   // 键盘空格控制主角
-  leadStop(event): void {
+  leadStop(event, type): void {
     // 判断是否点击空格
     console.log('点击空格')
-    if (event.keyCode === 32) {
+    if (event.keyCode === 32 || type.type === 'click') {
       if (this.tween && !this.isOver) {
         // 暂停动画
         this.tween.tween.stop()

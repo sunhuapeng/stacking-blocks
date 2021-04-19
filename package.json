@@ -16,6 +16,7 @@
     "@markusende/heatmap.js": "^2.0.6",
     "@tweenjs/tween.js": "^17.4.0",
     "async": "^2.6.2",
+    "qrcode": "^1.4.4",
     "style-resources-loader": "^1.3.3",
     "three": "^0.110.0"
   },
